@@ -68,6 +68,26 @@
             </form>
         </div>
     </div>
+    <script src="./libs/http.js"></script>
+    <script>
+        $(function(){
+            $.ajax({
+                url:BigNew.user_detail,
+                type:'get',
+                success:function(backData){
+                    console.log(backData);
+                    $('#inputEmail1').val(backData.data.username)
+                    $('#inputEmail2').val(backData.data.nickname)
+                    $('#inputEmail3').val(backData.data.email)
+                    $('.user_pic').attr('src',backData.data.userPic)
+                    $('#inputEmail4').val(backData.data.password)
+
+                }
+
+                
+            })
+        })
+    </script>
 </body>
 
 </html>

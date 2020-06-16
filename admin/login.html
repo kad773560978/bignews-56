@@ -38,6 +38,68 @@
     </div>
   </div>
 
+
+  <!-- 模态框 -->
+
+  <div class="modal fade" tabindex="-1" role="dialog" id="myModal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+              aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">温馨提示</h4>
+        </div>
+        <div class="modal-body">
+          <p>账号密码不能为空哦~</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">确定</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
+<script src="./libs/http.js"></script>
+
+  <script>
+    $(function () {
+      $('.input_sub').click(function (e) {
+        // 禁止按钮跳转
+        e.preventDefault();
+        // 先设置为空状态提示
+        $('#myModal').modal()
+        // 提交ajax
+        $.ajax({
+          // url: 'http://localhost:8080/api/v1/admin/user/login',
+          url: BigNew.user_login,
+          type: 'post',
+          dataType: 'json',
+          data: {
+            username: $('.input_txt').val(),
+            password: $('.input_pass').val()
+          },
+          success: function (backData) {
+            console.log(backData);
+            $('#myModal').modal()
+            // 返回的结果显示到模态框内部
+            $('.modal-body p').text(backData.msg)
+            if (backData.code == 200) {
+
+              //注意点~~~ 先存储token
+              localStorage.setItem('token',backData.token)
+
+              // 给模态框添加事件,当点击确定后, 在跳转首页
+              $('#myModal').on('hidden.bs.modal', function (e) {
+                window.location.href = './index.html'
+              })
+              
+            }
+
+          }
+        })
+      })
+    })
+  </script>
 </body>
 
 </html>
