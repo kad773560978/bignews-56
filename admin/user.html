@@ -44,11 +44,13 @@
                     <label for="inputPassword3" class="col-sm-2 control-label">用户图标：</label>
                     <div class="col-sm-10">
                         <img src="images/2.jpg" alt="" class="user_pic">
-                        <input style="display: block" name="userPic" type="file" id="exampleInputFile">
+                        <input style="display: none" name="userPic" type="file" id="exampleInputFile">
                         <!-- 给label标签的for属性赋值,值是input标签的id,那这样的话点击label就相当于点击了input -->
                         <br>
+
+                        <!-- label 标签里面 有个 for 属性,  在里面赋值上传按钮的 id 名就是代理触发了 他的事件 -->
                         <label for="exampleInputFile">
-                            <img src="./images/uploads_icon.jpg" style="height: 50px;" alt="">
+                            <img src="../images/cccc.png" style="height: 50px;" alt="">
                         </label>
                     </div>
                 </div>
@@ -70,22 +72,90 @@
     </div>
     <script src="./libs/http.js"></script>
     <script>
-        $(function(){
+        $(function () {
             $.ajax({
-                url:BigNew.user_detail,
-                type:'get',
-                success:function(backData){
+                url: BigNew.user_detail,
+                type: 'get',
+                success: function (backData) {
                     console.log(backData);
-                    $('#inputEmail1').val(backData.data.username)
-                    $('#inputEmail2').val(backData.data.nickname)
-                    $('#inputEmail3').val(backData.data.email)
-                    $('.user_pic').attr('src',backData.data.userPic)
-                    $('#inputEmail4').val(backData.data.password)
 
+                    // 这个方法有些 搓 ,可以优化
+                    // $('#inputEmail1').val(backData.data.username)
+                    // $('#inputEmail2').val(backData.data.nickname)
+                    // $('#inputEmail3').val(backData.data.email)
+                    // $('.user_pic').attr('src', backData.data.userPic)
+                    // $('#inputEmail4').val(backData.data.password)
+
+                    // 优化方案  通过 for in  循环
+                    for (let key in backData.data) {
+                        $('.' + key).val(backData.data[key])
+                        //  key 是 属性名,  backData.data[key/属性名]来获取属性值
+                        $('.user_pic').attr('src', backData.data.userPic)
+                    }
                 }
 
-                
+
             })
+
+
+            $('.btn-success').click(function (e) {
+                e.preventDefault();
+                var fr = new FormData($('#form')[0])
+
+                $.ajax({
+                    url: BigNew.user_edit,
+                    type: 'post',
+                    data: fr,
+                    contentType: false,
+                    processData: false,
+                    success: function (backData) {
+                        console.log(backData);
+                        if (backData.code == 200) {
+                            alert(backData.msg)
+                            // console.log(window.parent.location);
+
+                            // 方法一:  通过获取  父 window 来让他自己刷新
+                            // 这个因为是本地打开,所以获取不到  父 window, 这里会报错 ,如果是线上的话,就不会报错了
+                            // window.parent.location.reload();
+
+                            // 方法二:
+                            $.ajax({
+                                // url:'http://localhost:8080/api/v1/admin/user/info',
+                                url: BigNew.user_info,
+                                type: 'get',
+                                // headers:{
+                                //    Authorization : localStorage.getItem('token')
+                                // },
+                                success: function (backData) {
+                                    console.log(backData);
+                                    if (backData.code == 200) {
+                                        parent.$('.user_info>img').attr('src', backData.data.userPic)
+                                        parent.$('.user_info>span>i').text(backData.data.nickname)
+                                        parent.$('.user_center_link>img').attr('src', backData.data.userPic)
+                                    }
+                                }
+                            })
+
+                        }
+                    }
+                })
+
+
+
+
+            })
+
+
+            $('#exampleInputFile').change(function () {
+
+                    // 先设置 获取 上传的图片 二进制码
+                    var file = this.files[0];
+                    // 再将 图片二进制转化为图片格式 
+                    var urlimg = URL.createObjectURL(file)
+                    // 赋值给展示区域
+                    $('.user_pic').attr('src', urlimg)
+                    
+                })
         })
     </script>
 </body>

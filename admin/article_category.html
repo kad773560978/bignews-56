@@ -14,6 +14,7 @@
     <script src="./libs/bootstrap/js/bootstrap.min.js"></script>
     <!-- 引入模板引擎js文件 -->
     <script src="./libs/template-web.js"></script>
+    <script src="./libs/http.js"></script>
 </head>
 
 <body>
@@ -51,5 +52,186 @@
             </table>
         </div>
     </div>
+
+
+
+    <!-- 模态框 -->
+
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+
+                    <h4 class="modal-title" id="myModalLabel">编辑表单</h4>
+
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+
+                            <label for="recipient-name" class="control-label">文章分类名称:</label>
+
+                            <input type="text" class="form-control" autocomplete="off" id="recipient-name">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="message-text" class="control-label">文章分类别名:</label>
+                            <input class="form-control" autocomplete="off" id="message-text">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary contar">创建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script id='catelist' type="text/html">
+        {{each data v}}
+            <tr>
+                <td>{{ v.name }}</td>
+                <td>{{ v.slug }}</td>
+                <td class="text-center">
+                    <a href="javascript:void(0)" data-id="{{ v.id}}" data-toggle="modal" data-target="#myModal" class=" btn btn-info btn-xs">编辑</a>
+                    <a href="javascript:void(0)" data-id="{{ v.id}}"  class="btn btn-danger btn-xs condel">删除</a>
+                </td>
+            </tr>
+        {{/each}}
+    </script>
+    <script>
+
+        $(function () {
+            $.ajax({
+                url: BigNew.category_list,
+                type: 'get',
+                success: function (backData) {
+                    console.log(backData);
+
+                    $('tbody').html(template('catelist', backData))
+                }
+            })
+
+
+            // 当模态框显示的时候,  触发的事件
+            $('#myModal').on('show.bs.modal', function (e) {
+
+                var targetarr = e.relatedTarget
+
+                // 判断是否是 新增按钮触发的点击事件
+                if (targetarr == $('#xinzengfenlei')[0]) {
+
+                    $('#myModalLabel').text('新增类别')
+                    $('.btn-primary').text('新增').addClass('btn-success').removeClass('btn-info')
+
+                    // 判断是否是 修改按钮触发的点击事件
+                } else {
+
+                    $('#myModalLabel').text('修改类别')
+                    $('.btn-primary').text('保存').addClass('btn-info').removeClass('btn-success')
+
+
+                    // console.log($(targetarr).parent().prev().prev().text());
+                    // 获取 分类名称
+                    $('#recipient-name').val($(targetarr).parent().prev().prev().text())
+                    // 获取 分类别名
+                    $('#message-text').val($(targetarr).parent().prev().text())
+
+                    // 将 data-id 赋值给 修改按钮事件的, 等到下次再获取
+                    $('.contar').data('id', $(targetarr).data('id'))
+                }
+            })
+
+
+            // 当模态框 隐藏时候 触发的事件
+            $('#myModal').on('hidden.bs.modal', function (e) {
+                // do something...
+                // reset是清除 表单元素的所有 值 
+                // 只有 dom 元素才能使用的方法 , 所以要把jq元素转换为DOM
+                $('form')[0].reset()
+            })
+
+
+
+            // 创建 或 修改 的点击事件
+            $('.contar').on('click', function (e) {
+
+                // 判断触发的 按钮 的名字是什么, 真 就为 新增
+                if ($(this).text() == '新增') {
+                    $.ajax({
+                        url: BigNew.category_add,
+                        type: 'post',
+                        data: {
+                            name: $('#recipient-name').val(),
+                            slug: $('#message-text').val()
+                        },
+                        success: function (backData) {
+                            // console.log(backData);
+                            if (backData.code == 201) {
+                                alert('创建成功')
+                                // $('#myModal').modal('hide')
+                                window.location.reload()
+                            } else {
+                                alert('新增类目重复,创建失败')
+                            }
+                        }
+                    })
+
+                    // 假 为 修改
+                } else {
+                    $.ajax({
+                        url: BigNew.category_edit,
+                        type: 'post',
+                        data: {
+                            id: $(this).data('id'),
+                            name: $('#recipient-name').val(),
+                            slug: $('#message-text').val()
+                        },
+                        success: function (backData) {
+                            console.log(backData);
+                            if (backData.code == 200) {
+                                alert('修改成功')
+                                $('#myModal').modal('hide')
+                                window.location.reload()
+                            } else {
+                                alert("修改名称出错")
+                            }
+                        }
+                    })
+                }
+            })
+
+            // 设置 删除列表 ,  首先要做父级的事件委托,  因为是动态创建的缘故
+            $('.category_table>tbody').on('click', '.condel', function () {
+
+                if (confirm('是否删除分类')) {
+                    $.ajax({
+                        url: BigNew.category_delete,
+                        type: 'post',
+                        data: {
+                            id: $(this).data('id'),
+                        },
+                        success: function (backData) {
+                            console.log(backData);
+                            if (backData.code == 204) {
+                                alert('删除成功')
+                                $('#myModal').modal('hide')
+                                window.location.reload()
+                            }
+                        }
+                    })
+
+                }
+            })
+
+
+        })
+    </script>
+</body>
 
 </html>
